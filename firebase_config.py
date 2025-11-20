@@ -1,4 +1,4 @@
-import pyrebase
+import pyrebase5 as pyrebase
 
 # This dictionary contains all the Firebase configuration details
 # that you get from Firebase Console → Project Settings → Web API.
