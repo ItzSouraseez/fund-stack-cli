@@ -1,0 +1,9 @@
+Sourashis' Tasks:
+- [x] List project requirements in requirements.txt file.
+- [x] Build project structure.
+- [ ] Create Firebase project.
+- [ ] Integrate Firebase credentials in firebase_config.py file.
+- [ ] Enable Authentication services in Firebase.
+
+Vanshika's Tasks:
+- [ ] 
