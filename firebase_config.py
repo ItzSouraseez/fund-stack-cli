@@ -1,22 +1,11 @@
-import pyrebase
+import requests
 
-# This dictionary contains all the Firebase configuration details
-# that you get from Firebase Console → Project Settings → Web API.
-firebase_config = {
-    "apiKey": "AIzaSyB8MsAaONyO3MRyQWfw5Qque6iaVtK4fjg",
-    "authDomain": "fundstack-cli.firebaseapp.com",
-    "databaseURL": "https://fundstack-cli-default-rtdb.firebaseio.com/",
-    "projectId": "fundstack-cli",
-    "storageBucket": "fundstack-cli.appspot.com",
-    "messagingSenderId": "887689727012",
-    "appId": "1:887689727012:web:27a13bc5e51ef429e0dcb1"
-}
+# Base Firebase project details
+API_KEY = "YOUR_FIREBASE_API_KEY"
 
-# Initialize a firebase application using the config settings
-firebase = pyrebase.initialize_app(firebase_config)
+# Firebase Auth REST endpoints
+FIREBASE_AUTH_SIGNUP = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
+FIREBASE_AUTH_LOGIN = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
 
-# Authentication service (register, login, token handling)
-auth = firebase.auth()
-
-# Realtime Database service (read/write data)
-db = firebase.database()
+# Your Realtime Database URL
+DATABASE_URL = "https://YOUR_PROJECT_ID.firebaseio.com"
