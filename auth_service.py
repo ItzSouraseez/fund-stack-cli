@@ -1,89 +1,92 @@
-# Purpose: Handles registering users, logging in, logging out, saving session data locally, and storing user profile details in Firebase Database.
+import json
+import os
+import requests
+from firebase_config import (
+    FIREBASE_AUTH_LOGIN,
+    FIREBASE_AUTH_SIGNUP,
+    DATABASE_URL
+)
 
-from firebase_config import auth, db
-# Import the previously created Firebase auth and database objects, from firebase_config.py.
-
-import json # json helps us save the session to a file.
-import os # os helps check if the session file exists.
-
-# Name of the file where we store the login session locally
 SESSION_FILE = "session.json"
 
-# Saving a user session locally
-def save_session(user):
-    with open(SESSION_FILE, "w") as f: # Opens file with write permission
-        json.dump(user, f) # Saves the user data as JSON into the file
+
+def save_session(data):
+    with open(SESSION_FILE, "w") as f:
+        json.dump(data, f)
 
 
-# Explanation:
-# user contains token + user ID from Firebase.
-# We save it into a file so the user stays logged in between operations.
-
-# Getting the current session
 def get_session():
-    if not os.path.exists(SESSION_FILE): # Checks if the session file exists
-        return None # If the session file doesn't exist, no one is logged in
-
-    # If it exists, read and return the session data
-    with open(SESSION_FILE, "r") as f: # Opens file with read permission
-        return json.load(f) # Reads and returns the stored session data
+    if not os.path.exists(SESSION_FILE):
+        return None
+    with open(SESSION_FILE, "r") as f:
+        return json.load(f)
 
 
-# Clearing (logging out)
 def clear_session():
-    if os.path.exists(SESSION_FILE): # Checks if the session file exists
-        os.remove(SESSION_FILE) # Removes the session file, effectively logging the user out
+    if os.path.exists(SESSION_FILE):
+        os.remove(SESSION_FILE)
 
 
-# Save user data into database
-def save_user_profile(uid, name, age, phone, pan, email):
-    data = {
+# ------------------------------
+# CREATE USER (REGISTER)
+# ------------------------------
+def register_user(email, password, name, age, phone, pan):
+
+    payload = {
+        "email": email,
+        "password": password,
+        "returnSecureToken": True
+    }
+
+    response = requests.post(FIREBASE_AUTH_SIGNUP, json=payload)
+    data = response.json()
+
+    if "error" in data:
+        print("❌ Registration failed:", data["error"]["message"])
+        return None
+
+    # Save profile data in Firebase DB
+    uid = data["localId"]
+
+    profile = {
         "name": name,
         "age": age,
         "phone": phone,
         "pan": pan,
         "email": email
-    } # Create a structured dictionary with the user's profile info.
+    }
 
-    db.child("users").child(uid).set(data) # Writes the user data under: users/<uid>/ {name, age, ...}
+    requests.put(f"{DATABASE_URL}/users/{uid}.json", json=profile)
 
-    print("✔ User profile saved to database.") # Confirmation message
+    print("✔ User registered and profile saved.")
+    return data
 
-# Register a new user
-def register_user(email, password, name, age, phone, pan):
-    try: # Try to register the user
-        user = auth.create_user_with_email_and_password(email, password) # Firebase creates the user.
 
-        print("✔ User registered successfully.") # Confirmation message
-
-        uid = user["localId"] # Get the unique user ID assigned by Firebase.
-
-        save_user_profile(uid, name, age, phone, pan, email) # Save additional profile info to the database.
-
-        return user # Return the created user object
-
-    except Exception as e: # If an error occurs during registration
-        print("❌ Registration failed:", e) # Show the error message
-        return None # Return None if registration fails
-
-# Login user
+# ------------------------------
+# LOGIN USER
+# ------------------------------
 def login_user(email, password):
-    try: # Try to log in the user
-        user = auth.sign_in_with_email_and_password(email, password) # Firebase checks credentials and returns a token
+    payload = {
+        "email": email,
+        "password": password,
+        "returnSecureToken": True
+    }
 
-        save_session(user) # Store session in a JSON file
+    response = requests.post(FIREBASE_AUTH_LOGIN, json=payload)
+    data = response.json()
 
-        print("✔ Logged in successfully.") # Confirmation message
+    if "error" in data:
+        print("❌ Login failed:", data["error"]["message"])
+        return None
 
-        return user # Return the logged-in user object
+    save_session(data)
+    print("✔ Logged in successfully.")
+    return data
 
-    except Exception as e: # If an error occurs during login
-        print("❌ Login failed:", e) # Show the error message
-        return None # Return None if login fails
 
-# Logout user
-def logout_user(): 
-    clear_session() # Remove the session file
-    print("✔ Logged out successfully.") # Confirmation message
-
-# Removing session file logs the user out.
+# ------------------------------
+# LOGOUT
+# ------------------------------
+def logout_user():
+    clear_session()
+    print("✔ Logged out successfully.")
