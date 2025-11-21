@@ -36,3 +36,23 @@ def _wallet_base_path(uid: str) -> str:
     # ensure DATABASE_URL has no trailing slash
     base = DATABASE_URL.rstrip("/")
     return f"{base}/users/{uid}/wallets"
+
+def create_wallet(uid: str, name: str, currency: str, initial_balance: float = 0.0) -> Optional[str]:
+    """
+    Create a new wallet for user `uid`.
+    Returns wallet_id on success, None on failure.
+    """
+    wallet_id = uuid.uuid4().hex
+    wallet = {
+        "id": wallet_id,
+        "name": name,
+        "currency": currency.upper(),
+        "balance": float(initial_balance),
+        "created_at": int(time.time())
+    }
+    path = f"{_wallet_base_path(uid)}/{wallet_id}.json{_auth_query()}"
+    r = requests.put(path, json=wallet)
+    if r.status_code in (200, 204):
+        return wallet_id
+    # optionally return r.text for debugging
+    return None
