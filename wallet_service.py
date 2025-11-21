@@ -81,3 +81,16 @@ def _write_wallet_balance(uid: str, wallet_id: str, new_balance: float) -> bool:
     path = f"{_wallet_base_path(uid)}/{wallet_id}.json{_auth_query()}"
     r = requests.patch(path, json={"balance": new_balance})
     return r.status_code in (200, 204)
+
+def _add_wallet_transaction(uid: str, wallet_id: str, tx: Dict) -> Optional[str]:
+    """
+    Add a transaction record under wallet transactions.
+    Returns txid on success.
+    """
+    txid = uuid.uuid4().hex
+    base = DATABASE_URL.rstrip("/")
+    path = f"{base}/users/{uid}/wallets/{wallet_id}/transactions/{txid}.json{_auth_query()}"
+    r = requests.put(path, json=tx)
+    if r.status_code in (200, 204):
+        return txid
+    return None
