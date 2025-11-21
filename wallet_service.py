@@ -121,3 +121,35 @@ def deposit(uid: str, wallet_id: str, amount: float, note: str = "") -> bool:
     }
     _add_wallet_transaction(uid, wallet_id, tx)
     return True
+
+def withdraw(uid: str, wallet_id: str, amount: float, note: str = "") -> bool:
+    """
+    Subtracts amount from wallet if sufficient funds and creates a 'withdrawal' transaction.
+    """
+    if amount <= 0:
+        return False
+
+    wallet = get_wallet(uid, wallet_id)
+    if not wallet:
+        return False
+
+    curr_balance = float(wallet.get("balance", 0.0))
+    if amount > curr_balance:
+        # insufficient funds
+        return False
+
+    new_balance = curr_balance - float(amount)
+    ok = _write_wallet_balance(uid, wallet_id, new_balance)
+    if not ok:
+        return False
+
+    tx = {
+        "type": "withdrawal",
+        "amount": float(amount),
+        "currency": wallet.get("currency"),
+        "note": note,
+        "timestamp": int(time.time()),
+        "balance_after": new_balance
+    }
+    _add_wallet_transaction(uid, wallet_id, tx)
+    return True
