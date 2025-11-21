@@ -68,3 +68,10 @@ def list_wallets(uid: str) -> List[Dict]:
     data = r.json() or {}
     # data is mapping wallet_id -> wallet dict
     return list(data.values())
+
+def get_wallet(uid: str, wallet_id: str) -> Optional[Dict]:
+    path = f"{_wallet_base_path(uid)}/{wallet_id}.json{_auth_query()}"
+    r = requests.get(path)
+    if r.status_code != 200:
+        return None
+    return r.json()
