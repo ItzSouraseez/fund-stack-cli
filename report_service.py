@@ -9,7 +9,7 @@ def generate_report(transactions, budget_status, year, month):
     """Generate a monthly financial report using Gemini (official google-genai client)."""
 
     from google import genai
-    client = genai.Client(api_key="AIzaSyD1lxc2pXIQATjRr77EVhDacgo9qGinNk8")
+    client = genai.Client(api_key="AIzaSyB5U0X3McMYnHS24a2hGqEtHfpQspvQHak")
 
     # Clean prompt
     prompt = f"""
