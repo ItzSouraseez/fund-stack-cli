@@ -110,8 +110,11 @@ Enhanced user experience with **Rich** library.
 
 ```
 fund-stack-cli/
-├── main.py              # Entry point
+├── main.py              # CLI Entry point
 ├── cli.py               # Command Line Interface & User Interaction
+├── api.py               # FastAPI REST API Server
+├── api_auth.py          # API Authentication Dependency (Firebase token verification)
+├── models.py            # Pydantic Request/Response Models
 ├── auth_service.py      # Firebase Authentication
 ├── wallet_service.py    # Wallet & Transaction Logic
 ├── budget_service.py    # Budget Management
@@ -124,6 +127,76 @@ fund-stack-cli/
     ├── README.md
     ├── CLI.md
     └── SERVICES.md
+```
+
+---
+
+## 🌐 REST API
+
+FundStack exposes all its functionality as REST API endpoints using **FastAPI**. When running as a server, you get interactive API docs at `/docs` (Swagger UI) and `/redoc` (ReDoc).
+
+### Starting the API Server
+
+```bash
+# Option 1: Run directly
+python api.py
+# Server starts at http://127.0.0.1:8000
+
+# Option 2: Run with Uvicorn (production)
+uvicorn api:app --host 0.0.0.0 --port 8000
+
+# Option 3: Docker
+docker-compose up --build
+```
+
+### Authentication Flow
+
+1. Call `POST /api/auth/login` with email & password
+2. Receive an `idToken` in the response
+3. Pass it as `Authorization: Bearer <idToken>` in all subsequent requests
+
+### API Endpoints
+
+| Method | Endpoint | Auth? | Description |
+|--------|----------|-------|-------------|
+| `GET` | `/` | ❌ | Health check |
+| `POST` | `/api/auth/register` | ❌ | Register a new user |
+| `POST` | `/api/auth/login` | ❌ | Login, returns session tokens |
+| `POST` | `/api/auth/logout` | ✅ | Clears the server-side session |
+| `GET` | `/api/auth/session` | ✅ | Returns current session info |
+| `POST` | `/api/wallets` | ✅ | Create a new wallet |
+| `GET` | `/api/wallets` | ✅ | List all wallets |
+| `GET` | `/api/wallets/{wallet_id}` | ✅ | Get wallet details |
+| `POST` | `/api/wallets/{wallet_id}/deposit` | ✅ | Deposit into a wallet |
+| `POST` | `/api/wallets/{wallet_id}/withdraw` | ✅ | Withdraw from a wallet |
+| `POST` | `/api/wallets/transfer` | ✅ | Transfer between wallets |
+| `GET` | `/api/transactions` | ✅ | Get all transactions |
+| `POST` | `/api/budgets` | ✅ | Set a monthly budget |
+| `GET` | `/api/budgets/{year}/{month}` | ✅ | Get budget status |
+| `POST` | `/api/reports/{year}/{month}` | ✅ | Generate AI monthly report |
+
+### Example: curl Usage
+
+```bash
+# Register
+curl -X POST http://127.0.0.1:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"test123","name":"Test User","age":"25","phone":"1234567890","pan":"ABCDE1234F"}'
+
+# Login (save the idToken from the response)
+curl -X POST http://127.0.0.1:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"test123"}'
+
+# Create a wallet (use the token from login)
+curl -X POST http://127.0.0.1:8000/api/wallets \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <YOUR_ID_TOKEN>" \
+  -d '{"name":"Savings","currency":"INR","initial_balance":10000}'
+
+# List wallets
+curl -H "Authorization: Bearer <YOUR_ID_TOKEN>" \
+  http://127.0.0.1:8000/api/wallets
 ```
 
 ---
@@ -248,6 +321,9 @@ docker-compose up --build
 | **Firebase Realtime Database** | Cloud data storage for wallets, transactions, budgets |
 | **Google Gemini AI** | Intelligent financial report generation |
 | **Rich** | Beautiful terminal UI (tables, panels, colors, spinners) |
+| **FastAPI** | REST API framework with auto-generated Swagger docs |
+| **Uvicorn** | ASGI server for running the FastAPI application |
+| **Pydantic** | Data validation and serialization for API request/response models |
 | **Requests** | HTTP client for API communication |
 | **Docker** | Containerization for easy deployment |
 

@@ -13,5 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Run main.py when the container launches
-CMD ["python", "main.py"]
+# Expose the FastAPI server port
+EXPOSE 8000
+
+# Run the FastAPI server with Uvicorn when the container launches
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
